@@ -384,7 +384,46 @@
     }
     return null;
   }
+function enableGyroscope() {
+  // 1. Validar si la variable viewer existe
+  if (typeof viewer === 'undefined') {
+    alert('Error: La variable "viewer" no está accesible aquí.');
+    return;
+  }
 
+  // 2. Verificar protocolo HTTPS
+  if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+    alert('Error: El giroscopio requiere una conexión segura HTTPS.');
+    return;
+  }
+
+  // 3. Proceso de permisos e inicio
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission()
+      .then(function(permissionState) {
+        if (permissionState === 'granted') {
+          window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+          gyroEnabled = true;
+          gyroBtn.textContent = 'Desactivar Giroscopio';
+          gyroBtn.classList.add('active');
+          alert('Giroscopio activado con éxito.');
+        } else {
+          alert('Permiso denegado por el usuario.');
+        }
+      })
+      .catch(function(err) {
+        alert('Error al pedir permisos: ' + err);
+      });
+  } else if ('DeviceOrientationEvent' in window) {
+    window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+    gyroEnabled = true;
+    gyroBtn.textContent = 'Desactivar Giroscopio';
+    gyroBtn.classList.add('active');
+    alert('Giroscopio activado.');
+  } else {
+    alert('Tu dispositivo no soporta DeviceOrientationEvent.');
+  }
+}
   // Display the initial scene.
   switchScene(scenes[0]);
 
