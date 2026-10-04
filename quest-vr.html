@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Tour VR Meta Quest</title>
+
+    <!-- Librería A-Frame para WebXR nativo -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  </head>
+  <body>
+    <a-scene webxr="optionalFeatures: hit-test">
+      <!-- Carga tu imagen panorámica 360 -->
+      <a-assets>
+        <img id="panorama" src="tu_imagen_360.jpg">
+      </a-assets>
+
+      <!-- Proyección 360 -->
+      <a-sky src="#panorama" rotation="0 -90 0"></a-sky>
+
+      <!-- Cámara con seguimiento de cabeza -->
+      <a-entity camera look-controls position="0 1.6 0"></a-entity>
+    </a-scene>
+  </body>
+</html>
