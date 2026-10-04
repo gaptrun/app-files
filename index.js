@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -147,13 +147,15 @@
   // Set handler for scene switch.
   scenes.forEach(function(scene) {
     var el = document.querySelector('#sceneList .scene[data-id="' + scene.data.id + '"]');
-    el.addEventListener('click', function() {
-      switchScene(scene);
-      // On mobile, hide scene list after selecting a scene.
-      if (document.body.classList.contains('mobile')) {
-        hideSceneList();
-      }
-    });
+    if (el) {
+      el.addEventListener('click', function() {
+        switchScene(scene);
+        // On mobile, hide scene list after selecting a scene.
+        if (document.body.classList.contains('mobile')) {
+          hideSceneList();
+        }
+      });
+    }
   });
 
   // DOM elements for view controls.
@@ -221,7 +223,7 @@
   }
 
   function startAutorotate() {
-    if (!autorotateToggleElement.classList.contains('enabled')) {
+    if (!autorotateToggleElement.classList.contains('enabled') || gyroEnabled) {
       return;
     }
     viewer.startMovement(autorotate);
@@ -244,34 +246,26 @@
   }
 
   function createLinkHotspotElement(hotspot) {
-
-    // Create wrapper element to hold icon and tooltip.
     var wrapper = document.createElement('div');
     wrapper.classList.add('hotspot');
     wrapper.classList.add('link-hotspot');
 
-    // Create image element.
     var icon = document.createElement('img');
     icon.src = 'img/link.png';
     icon.classList.add('link-hotspot-icon');
 
-    // Set rotation transform.
     var transformProperties = [ '-ms-transform', '-webkit-transform', 'transform' ];
     for (var i = 0; i < transformProperties.length; i++) {
       var property = transformProperties[i];
       icon.style[property] = 'rotate(' + hotspot.rotation + 'rad)';
     }
 
-    // Add click event handler.
     wrapper.addEventListener('click', function() {
       switchScene(findSceneById(hotspot.target));
     });
 
-    // Prevent touch and scroll events from reaching the parent element.
-    // This prevents the view control logic from interfering with the hotspot.
     stopTouchAndScrollEventPropagation(wrapper);
 
-    // Create tooltip element.
     var tooltip = document.createElement('div');
     tooltip.classList.add('hotspot-tooltip');
     tooltip.classList.add('link-hotspot-tooltip');
@@ -284,17 +278,13 @@
   }
 
   function createInfoHotspotElement(hotspot) {
-
-    // Create wrapper element to hold icon and tooltip.
     var wrapper = document.createElement('div');
     wrapper.classList.add('hotspot');
     wrapper.classList.add('info-hotspot');
 
-    // Create hotspot/tooltip header.
     var header = document.createElement('div');
     header.classList.add('info-hotspot-header');
 
-    // Create image element.
     var iconWrapper = document.createElement('div');
     iconWrapper.classList.add('info-hotspot-icon-wrapper');
     var icon = document.createElement('img');
@@ -302,7 +292,6 @@
     icon.classList.add('info-hotspot-icon');
     iconWrapper.appendChild(icon);
 
-    // Create title element.
     var titleWrapper = document.createElement('div');
     titleWrapper.classList.add('info-hotspot-title-wrapper');
     var title = document.createElement('div');
@@ -310,7 +299,6 @@
     title.innerHTML = hotspot.title;
     titleWrapper.appendChild(title);
 
-    // Create close element.
     var closeWrapper = document.createElement('div');
     closeWrapper.classList.add('info-hotspot-close-wrapper');
     var closeIcon = document.createElement('img');
@@ -318,21 +306,17 @@
     closeIcon.classList.add('info-hotspot-close-icon');
     closeWrapper.appendChild(closeIcon);
 
-    // Construct header element.
     header.appendChild(iconWrapper);
     header.appendChild(titleWrapper);
     header.appendChild(closeWrapper);
 
-    // Create text element.
     var text = document.createElement('div');
     text.classList.add('info-hotspot-text');
     text.innerHTML = hotspot.text;
 
-    // Place header and text into wrapper element.
     wrapper.appendChild(header);
     wrapper.appendChild(text);
 
-    // Create a modal for the hotspot content to appear on mobile mode.
     var modal = document.createElement('div');
     modal.innerHTML = wrapper.innerHTML;
     modal.classList.add('info-hotspot-modal');
@@ -343,23 +327,16 @@
       modal.classList.toggle('visible');
     };
 
-    // Show content when hotspot is clicked.
     wrapper.querySelector('.info-hotspot-header').addEventListener('click', toggle);
-
-    // Hide content when close icon is clicked.
     modal.querySelector('.info-hotspot-close-wrapper').addEventListener('click', toggle);
 
-    // Prevent touch and scroll events from reaching the parent element.
-    // This prevents the view control logic from interfering with the hotspot.
     stopTouchAndScrollEventPropagation(wrapper);
 
     return wrapper;
   }
 
-  // Prevent touch and scroll events from reaching the parent element.
-  function stopTouchAndScrollEventPropagation(element, eventList) {
-    var eventList = [ 'touchstart', 'touchmove', 'touchend', 'touchcancel',
-                      'wheel', 'mousewheel' ];
+  function stopTouchAndScrollEventPropagation(element) {
+    var eventList = [ 'touchstart', 'touchmove', 'touchend', 'touchcancel', 'wheel', 'mousewheel' ];
     for (var i = 0; i < eventList.length; i++) {
       element.addEventListener(eventList[i], function(event) {
         event.stopPropagation();
@@ -384,96 +361,107 @@
     }
     return null;
   }
+
   // Display the initial scene.
   switchScene(scenes[0]);
 
-// ==========================================
-// CONTROL POR GIROSCOPIO (DeviceOrientation)
-// ==========================================
+  // ==========================================
+  // CONTROL POR GIROSCOPIO (OPTIMIZADO)
+  // ==========================================
 
-var gyroEnabled = false;
-var gyroBtn = document.getElementById('gyro-btn');
+  var gyroEnabled = false;
+  var gyroBtn = document.getElementById('gyro-btn');
 
-// Convierte grados sexagesimales a radianes
-function degToRad(deg) {
-  return deg * (Math.PI / 180);
-}
-
-// Manejador del evento de orientación
-function handleDeviceOrientation(event) {
-  if (!gyroEnabled) return;
-
-  var view = viewer.view();
-  if (!view) return;
-
-  // Extraer valores de los ejes del teléfono (alpha: brújula/yaw, beta: inclinación/pitch)
-  var alpha = event.alpha ? degToRad(event.alpha) : 0;
-  var beta  = event.beta  ? degToRad(event.beta - 90) : 0;
-
-  // Actualizar la orientación en Marzipano
-  view.setYaw(-alpha);
-  view.setPitch(-beta);
-}
-
-function enableGyroscope() {
-  // 1. Validar si la variable viewer existe
-  if (typeof viewer === 'undefined') {
-    alert('Error: La variable "viewer" no está accesible aquí.');
-    return;
+  function degToRad(deg) {
+    return deg * (Math.PI / 180);
   }
 
-  // 2. Verificar protocolo HTTPS
-  if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-    alert('Error: El giroscopio requiere una conexión segura HTTPS.');
-    return;
-  }
+  function handleDeviceOrientation(event) {
+    if (!gyroEnabled) return;
 
-  // 3. Proceso de permisos e inicio
-  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-    DeviceOrientationEvent.requestPermission()
-      .then(function(permissionState) {
-        if (permissionState === 'granted') {
-          window.addEventListener('deviceorientation', handleDeviceOrientation, true);
-          gyroEnabled = true;
-          gyroBtn.textContent = 'Desactivar Giroscopio';
-          gyroBtn.classList.add('active');
-          alert('Giroscopio activado con éxito.');
-        } else {
-          alert('Permiso denegado por el usuario.');
-        }
-      })
-      .catch(function(err) {
-        alert('Error al pedir permisos: ' + err);
-      });
-  } else if ('DeviceOrientationEvent' in window) {
-    window.addEventListener('deviceorientation', handleDeviceOrientation, true);
-    gyroEnabled = true;
-    gyroBtn.textContent = 'Desactivar Giroscopio';
-    gyroBtn.classList.add('active');
-    alert('Giroscopio activado.');
-  } else {
-    alert('Tu dispositivo no soporta DeviceOrientationEvent.');
-  }
-}
+    var view = viewer ? viewer.view() : null;
+    if (!view) return;
 
-// Desactivar el giroscopio
-function disableGyroscope() {
-  window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
-  gyroEnabled = false;
-  gyroBtn.textContent = 'Activar Giroscopio';
-  gyroBtn.classList.remove('active');
-}
+    var alpha = event.alpha;
+    var beta = event.beta;
 
-// Evento click del botón
-if (gyroBtn) {
-  gyroBtn.addEventListener('click', function() {
-    if (gyroEnabled) {
-      disableGyroscope();
-    } else {
-      enableGyroscope();
+    if (alpha === null || beta === null || alpha === undefined || beta === undefined) {
+      return;
     }
-  });
-}
-  
+
+    var yaw = degToRad(alpha);
+    var pitch = degToRad(beta - 90);
+
+    // Actualiza la orientación en Marzipano mediante setParameters
+    view.setParameters({
+      yaw: -yaw,
+      pitch: -pitch
+    });
+  }
+
+  function startGyroListeners() {
+    if ('ondeviceorientationabsolute' in window) {
+      window.addEventListener('deviceorientationabsolute', handleDeviceOrientation, true);
+    } else if ('ondeviceorientation' in window) {
+      window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+    }
+    
+    gyroEnabled = true;
+    stopAutorotate(); // Detener autorotación para no interferir
+    if (gyroBtn) {
+      gyroBtn.textContent = 'Desactivar Giroscopio';
+      gyroBtn.classList.add('active');
+    }
+  }
+
+  function enableGyroscope() {
+    // Validar HTTPS (salvo localhost)
+    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      alert('El giroscopio solo funciona en conexiones seguras (HTTPS).');
+      return;
+    }
+
+    // Proceso de permisos iOS 13+
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission()
+        .then(function(permissionState) {
+          if (permissionState === 'granted') {
+            startGyroListeners();
+          } else {
+            alert('Permiso denegado por el usuario.');
+          }
+        })
+        .catch(function(err) {
+          alert('Error al solicitar permiso de orientación: ' + err);
+        });
+    } else if ('DeviceOrientationEvent' in window) {
+      startGyroListeners();
+    } else {
+      alert('Tu navegador o dispositivo no soporta sensores de orientación.');
+    }
+  }
+
+  function disableGyroscope() {
+    window.removeEventListener('deviceorientationabsolute', handleDeviceOrientation, true);
+    window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
+    gyroEnabled = false;
+    if (gyroBtn) {
+      gyroBtn.textContent = 'Activar Giroscopio';
+      gyroBtn.classList.remove('active');
+    }
+    startAutorotate();
+  }
+
+  if (gyroBtn) {
+    gyroBtn.addEventListener('click', function() {
+      if (gyroEnabled) {
+        disableGyroscope();
+      } else {
+        enableGyroscope();
+      }
+    });
+  } else {
+    console.warn('No se encontró el elemento con id "gyro-btn" en el HTML.');
+  }
 
 })();
