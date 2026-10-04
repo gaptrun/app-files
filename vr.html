@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Tour VR - Meta Quest</title>
+
+  <!-- 1. Cargar A-Frame para WebXR nativo -->
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+
+  <!-- 2. Cargar la configuración exportada de Marzipano -->
+  <script src="app-files/data.js"></script>
+
+  <style>
+    #ui-vr-container {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 99999;
+      display: flex;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.85);
+      padding: 12px 20px;
+      border-radius: 10px;
+    }
+
+    .btn-vr {
+      padding: 10px 16px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .btn-scene {
+      padding: 10px 14px;
+      background: #444;
+      color: white;
+      border: 1px solid #666;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Interfaz de selección en pantalla 2D -->
+  <div id="ui-vr-container">
+    <button class="btn-vr" onclick="enterVRMode()">ENTRAR EN VR (META QUEST)</button>
+    <div id="scene-buttons"></div>
+  </div>
+
+  <!-- Escena A-Frame / WebXR -->
+  <a-scene vr-mode-ui="enabled: true">
+    <a-assets id="assets-container"></a-assets>
+
+    <!-- Imagen de fondo 360 -->
+    <a-sky id="sky-vr" rotation="0 -90 0"></a-sky>
+
+    <!-- Hotspots flotantes dentro de VR -->
+    <a-entity id="hotspots-container"></a-entity>
+
+    <!-- Cámara y Controles de Mandos Meta Quest -->
+    <a-entity id="cameraRig">
+      <a-camera look-controls>
+        <a-cursor raycaster="objects: .clickable" color="#FFD700"></a-cursor>
+      </a-camera>
+      <a-entity laser-controls="hand: right" raycaster="objects: .clickable"></a-entity>
+      <a-entity laser-controls="hand: left" raycaster="objects: .clickable"></a-entity>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    var appData = window.APP_DATA;
+    var currentScene = null;
+
+    // Convierte coordenadas Yaw/Pitch de Marzipano a posición 3D (X, Y, Z) en A-Frame
+    function marzipanoToCartesian(yaw, pitch, radius) {
+      radius = radius || 3;
+      var x = radius * Math.cos(pitch) * Math.sin(yaw);
+      var y = radius * Math.sin(pitch);
+      var z = -radius * Math.cos(pitch) * Math.cos(yaw);
+      return x + ' ' + y + ' ' + z;
+    }
+
+    // Carga una escena de Marzipano en el visor WebXR
+    function loadMarzipanoScene(sceneId) {
+      var sceneData = appData.scenes.find(function(s) { return s.id === sceneId; });
+      if (!sceneData) return;
+
+      currentScene = sceneData;
+
+      // Asignar imagen panorámica de vista previa o imagen base de la escena
+      var sky = document.getElementById('sky-vr');
+      sky.setAttribute('src', 'tiles/' + sceneData.id + '/preview.jpg');
+
+      // Limpiar y regenerar hotspots 3D
+      var hotspotsContainer = document.getElementById('hotspots-container');
+      hotspotsContainer.innerHTML = '';
+
+      if (sceneData.linkHotspots) {
+        sceneData.linkHotspots.forEach(function(hotspot) {
+          var targetScene = appData.scenes.find(function(s) { return s.id === hotspot.target; });
+          var pos3D = marzipanoToCartesian(hotspot.yaw, hotspot.pitch, 3.5);
+
+          var plane = document.createElement('a-plane');
+          plane.setAttribute('class', 'clickable');
+          plane.setAttribute('position', pos3D);
+          plane.setAttribute('width', '1.4');
+          plane.setAttribute('height', '0.5');
+          plane.setAttribute('color', '#007bff');
+          plane.setAttribute('look-at', '[camera]');
+
+          var text = document.createElement('a-text');
+          text.setAttribute('value', targetScene ? targetScene.name : 'Ir a escena');
+          text.setAttribute('align', 'center');
+          text.setAttribute('color', '#FFF');
+          text.setAttribute('width', '3.5');
+
+          plane.appendChild(text);
+          plane.addEventListener('click', function() {
+            loadMarzipanoScene(hotspot.target);
+          });
+
+          hotspotsContainer.appendChild(plane);
+        });
+      }
+    }
+
+    // Inicialización al cargar la página
+    window.addEventListener('DOMContentLoaded', function() {
+      if (!appData || !appData.scenes || appData.scenes.length === 0) {
+        alert('No se encontraron datos en app-files/data.js');
+        return;
+      }
+
+      // Generar botones de escenas en el menú 2D
+      var btnContainer = document.getElementById('scene-buttons');
+      appData.scenes.forEach(function(scene) {
+        var btn = document.createElement('button');
+        btn.className = 'btn-scene';
+        btn.textContent = scene.name;
+        btn.onclick = function() { loadMarzipanoScene(scene.id); };
+        btnContainer.appendChild(btn);
+      });
+
+      // Cargar la primera escena
+      loadMarzipanoScene(appData.scenes[0].id);
+    });
+
+    function enterVRMode() {
+      var scene = document.querySelector('a-scene');
+      if (scene) {
+        scene.enterVR();
+      }
+    }
+  </script>
+</body>
+</html>
