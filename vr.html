@@ -97,10 +97,7 @@
       if (!sceneData) return;
 
       var sky = document.getElementById('sky-vr');
- 
-//sky.setAttribute('src', 'tiles/' + sceneData.id + '/preview.jpg');
-      // CÓDIGO CORREGIDO (Usa foto 360 equirrectangular real)
-//sky.setAttribute('src', 'panoramas/' + sceneData.id + '.jpg');
+
       sky.setAttribute('src', 'panoramas/' + sceneData.id.slice(3) + '.jpg');
 
       var hotspotsContainer = document.getElementById('hotspots-container');
