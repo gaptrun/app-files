@@ -98,7 +98,7 @@
 
       var sky = document.getElementById('sky-vr');
 
-      sky.setAttribute('src', 'panoramas/' + sceneData.id.slice(3) + '.jpg');
+      sky.setAttribute('src', 'panoramas/' + sceneData.id.slice(3).toUpperCase() + '.jpg');
 
       var hotspotsContainer = document.getElementById('hotspots-container');
       hotspotsContainer.innerHTML = '';
