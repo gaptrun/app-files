@@ -98,7 +98,9 @@
 
       var sky = document.getElementById('sky-vr');
  
-sky.setAttribute('src', 'tiles/' + sceneData.id + '/preview.jpg');
+//sky.setAttribute('src', 'tiles/' + sceneData.id + '/preview.jpg');
+      // CÓDIGO CORREGIDO (Usa foto 360 equirrectangular real)
+sky.setAttribute('src', 'panoramas/' + sceneData.id + '.jpg');
 
       var hotspotsContainer = document.getElementById('hotspots-container');
       hotspotsContainer.innerHTML = '';
