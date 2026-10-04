@@ -4,27 +4,7 @@
   <meta charset="utf-8">
   <title>Tour VR - Meta Quest</title>
 
-// Mapeo manual de ID de Marzipano -> Tu foto panorámica original
-var fotosOriginales = {
-  "0-entrada": "panoramas/entrada_360.jpg",
-  "1-sala": "panoramas/sala_360.jpg"
-  // Agrega aquí los IDs de data.js y las rutas de tus fotos
-};
 
-function loadMarzipanoScene(sceneId) {
-  var appData = getAppData();
-  if (!appData) return;
-
-  var sceneData = appData.scenes.find(function(s) { return s.id === sceneId; });
-  if (!sceneData) return;
-
-  // Cargar la imagen panorámica real mapeada
-  var rutaFoto = fotosOriginales[sceneId] || ('panoramas/' + sceneData.id + '.jpg');
-  var sky = document.getElementById('sky-vr');
-  sky.setAttribute('src', rutaFoto);
-
-  // ... (El resto del código de hotspots se mantiene igual)
-}
 
 
   
