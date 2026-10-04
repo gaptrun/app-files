@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Tour Virtual 360 WebXR - Meta Quest</title>
+  <!-- Librería A-Frame con soporte WebXR nativo -->
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+
+  <style>
+    /* Menú flotante principal (pantalla 2D) */
+    #main-ui {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 12px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    .btn-ui {
+      padding: 10px 18px;
+      background: #333333;
+      color: #ffffff;
+      border: 1px solid #555;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Botón principal de VR */
+    .btn-vr-main {
+      background: #28a745;
+      border-color: #28a745;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. MENÚ PRINCIPAL 2D (Visible fuera de VR) -->
+  <div id="main-ui">
+    <button class="btn-ui btn-vr-main" onclick="triggerVR()">ENTRAR EN VR (META QUEST)</button>
+    <button class="btn-ui" onclick="changeScene('#pano1')">Escena 1</button>
+    <button class="btn-ui" onclick="changeScene('#pano2')">Escena 2</button>
+  </div>
+
+  <!-- 2. ESCENA 3D / VR -->
+  <a-scene vr-mode-ui="enabled: true">
+    
+    <!-- Carga previa de las imágenes 360° -->
+    <a-assets>
+      <img id="pano1" src="tu_foto_1.jpg">
+      <img id="pano2" src="tu_foto_2.jpg">
+      <!-- Agrega aquí más imágenes: <img id="pano3" src="tu_foto_3.jpg"> -->
+    </a-assets>
+
+    <!-- Fondo equirrectangular 360 -->
+    <a-sky id="sky" src="#pano1" rotation="0 -90 0"></a-sky>
+
+    <!-- Cámara y Controles (Puntero láser para mandos Meta Quest + Cursor de mirada) -->
+    <a-entity id="cameraRig">
+      <a-camera look-controls>
+        <!-- Puntero central por si usas el visor sin mandos -->
+        <a-cursor raycaster="objects: .clickable" color="#FFD700"></a-cursor>
+      </a-camera>
+      
+      <!-- Controles con haz de luz para los mandos de Meta Quest -->
+      <a-entity laser-controls="hand: right" raycaster="objects: .clickable"></a-entity>
+      <a-entity laser-controls="hand: left" raycaster="objects: .clickable"></a-entity>
+    </a-entity>
+
+    <!-- 3. HOTSPOTS 3D (Puntos clicables visibles dentro del entorno VR) -->
+    
+    <!-- Botón flotante 3D para pasar a la Escena 2 -->
+    <a-plane class="clickable" position="2 1.5 -3" rotation="0 -20 0" width="1.6" height="0.6" color="#007bff"
+             onclick="changeScene('#pano2')">
+      <a-text value="Ir a Escena 2" align="center" color="#FFF" width="4"></a-text>
+    </a-plane>
+
+    <!-- Botón flotante 3D para regresar a la Escena 1 -->
+    <a-plane class="clickable" position="-2 1.5 -3" rotation="0 20 0" width="1.6" height="0.6" color="#28a745"
+             onclick="changeScene('#pano1')">
+      <a-text value="Ir a Escena 1" align="center" color="#FFF" width="4"></a-text>
+    </a-plane>
+
+  </a-scene>
+
+  <!-- 4. LÓGICA JAVASCRIPT -->
+  <script>
+    // Cambia la imagen 360 al instante sin salir de la sesión WebXR/VR
+    function changeScene(imageSelector) {
+      var sky = document.getElementById('sky');
+      sky.setAttribute('src', imageSelector);
+    }
+
+    // Dispara el modo VR inmersivo al presionar tu botón personalizado
+    function triggerVR() {
+      var scene = document.querySelector('a-scene');
+      if (scene.is('vr-mode')) {
+        scene.exitVR();
+      } else {
+        scene.enterVR();
+      }
+    }
+  </script>
+
+</body>
+</html>
