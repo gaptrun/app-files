@@ -384,20 +384,40 @@
     }
     return null;
   }
+  // Display the initial scene.
+  switchScene(scenes[0]);
+
+// ==========================================
+// CONTROL POR GIROSCOPIO (DeviceOrientation)
+// ==========================================
+
+var gyroEnabled = false;
+var gyroBtn = document.getElementById('gyro-btn');
+
+// Convierte grados sexagesimales a radianes
+function degToRad(deg) {
+  return deg * (Math.PI / 180);
+}
+
+// Manejador del evento de orientación
+function handleDeviceOrientation(event) {
+  if (!gyroEnabled) return;
+
+  var view = viewer.view();
+  if (!view) return;
+
+  // Extraer valores de los ejes del teléfono (alpha: brújula/yaw, beta: inclinación/pitch)
+  var alpha = event.alpha ? degToRad(event.alpha) : 0;
+  var beta  = event.beta  ? degToRad(event.beta - 90) : 0;
+
+  // Actualizar la orientación en Marzipano
+  view.setYaw(-alpha);
+  view.setPitch(-beta);
+}
+
+// Activar el giroscopio gestionando permisos en iOS / Android
 function enableGyroscope() {
-  // 1. Validar si la variable viewer existe
-  if (typeof viewer === 'undefined') {
-    alert('Error: La variable "viewer" no está accesible aquí.');
-    return;
-  }
-
-  // 2. Verificar protocolo HTTPS
-  if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-    alert('Error: El giroscopio requiere una conexión segura HTTPS.');
-    return;
-  }
-
-  // 3. Proceso de permisos e inicio
+  // Verificación de permiso en iOS 13+
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
     DeviceOrientationEvent.requestPermission()
       .then(function(permissionState) {
@@ -406,25 +426,40 @@ function enableGyroscope() {
           gyroEnabled = true;
           gyroBtn.textContent = 'Desactivar Giroscopio';
           gyroBtn.classList.add('active');
-          alert('Giroscopio activado con éxito.');
         } else {
-          alert('Permiso denegado por el usuario.');
+          alert('Permiso denegado para usar el giroscopio.');
         }
       })
-      .catch(function(err) {
-        alert('Error al pedir permisos: ' + err);
-      });
+      .catch(console.error);
   } else if ('DeviceOrientationEvent' in window) {
+    // Android y navegadores de escritorio/móvil estándar
     window.addEventListener('deviceorientation', handleDeviceOrientation, true);
     gyroEnabled = true;
     gyroBtn.textContent = 'Desactivar Giroscopio';
     gyroBtn.classList.add('active');
-    alert('Giroscopio activado.');
   } else {
-    alert('Tu dispositivo no soporta DeviceOrientationEvent.');
+    alert('Tu dispositivo o navegador no soporta sensores de orientación.');
   }
 }
-  // Display the initial scene.
-  switchScene(scenes[0]);
+
+// Desactivar el giroscopio
+function disableGyroscope() {
+  window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
+  gyroEnabled = false;
+  gyroBtn.textContent = 'Activar Giroscopio';
+  gyroBtn.classList.remove('active');
+}
+
+// Evento click del botón
+if (gyroBtn) {
+  gyroBtn.addEventListener('click', function() {
+    if (gyroEnabled) {
+      disableGyroscope();
+    } else {
+      enableGyroscope();
+    }
+  });
+}
+  
 
 })();
