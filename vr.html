@@ -98,12 +98,9 @@
 
       var sky = document.getElementById('sky-vr');
 
-    //  sky.setAttribute('src', 'panoramas/' + sceneData.id.slice(3).toUpperCase() + '.jpg');
+    sky.setAttribute('src', 'panoramas/' + sceneData.id.slice(3).toUpperCase() + '.jpg');
 
-      sky.setAttribute(
-  'src', 
-  `panoramas/${sceneData.id.slice(parseInt(sceneData.id.slice(0, 2), 10) < 10 ? 2 : 3).toUpperCase()}.jpg`
-);
+
 
       var hotspotsContainer = document.getElementById('hotspots-container');
       hotspotsContainer.innerHTML = '';
