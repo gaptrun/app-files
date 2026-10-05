@@ -98,9 +98,18 @@
 
       var sky = document.getElementById('sky-vr');
 
-    sky.setAttribute('src', 'panoramas/' + sceneData.id.slice(3).toUpperCase() + '.jpg');
+   
 
+// Convertimos los primeros 2 caracteres a número
+const primerosDos = parseInt(sceneData.id.slice(0, 2), 10);
 
+// Si es menor a 10 corta 2, de lo contrario corta 3
+const caracteresACortar = primerosDos < 10 ? 2 : 3;
+
+// Aplicamos el corte, convertimos a mayúsculas y asignamos el atributo
+const idLimpio = sceneData.id.slice(caracteresACortar).toUpperCase();
+
+sky.setAttribute('src', 'panoramas/' + idLimpio + '.jpg');
 
       var hotspotsContainer = document.getElementById('hotspots-container');
       hotspotsContainer.innerHTML = '';
