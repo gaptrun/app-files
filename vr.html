@@ -1,6 +1,32 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <script>
+  // Componente para activar el giro con el Joystick de las Meta Quest
+  AFRAME.registerComponent('vr-stick-turn', {
+    init: function () {
+      this.coolDown = false;
+      this.el.addEventListener('thumbstickmoved', (evt) => {
+        if (this.coolDown) return;
+        var rig = document.getElementById('cameraRig');
+        if (!rig) return;
+
+        // Si empujas el joystick a la izquierda o derecha
+        if (evt.detail.x < -0.6) {
+          rig.object3D.rotation.y += Math.PI / 6; // Girar 30° a la izquierda
+          this.triggerCoolDown();
+        } else if (evt.detail.x > 0.6) {
+          rig.object3D.rotation.y -= Math.PI / 6; // Girar 30° a la derecha
+          this.triggerCoolDown();
+        }
+      });
+    },
+    triggerCoolDown: function () {
+      this.coolDown = true;
+      setTimeout(() => { this.coolDown = false; }, 300);
+    }
+  });
+</script>
   <meta charset="utf-8">
   <title>Tour VR - Meta Quest</title>
 
@@ -64,13 +90,25 @@
     <a-entity id="hotspots-container"></a-entity>
 
     <!-- Cámara y Controles WebXR -->
-    <a-entity id="cameraRig">
-      <a-camera look-controls>
-        <a-cursor raycaster="objects: .clickable" color="#FFD700"></a-cursor>
-      </a-camera>
-      <a-entity laser-controls="hand: right" raycaster="objects: .clickable"></a-entity>
-      <a-entity laser-controls="hand: left" raycaster="objects: .clickable"></a-entity>
-    </a-entity>
+<!-- Cámara y Controles de Meta Quest con Soporte de Joysticks -->
+<a-entity id="cameraRig">
+  <!-- Cámara (Head Tracking de la cabeza) -->
+  <a-camera id="headCamera" look-controls></a-camera>
+  
+  <!-- Mando Izquierdo: Puntero láser + Giro con Joystick -->
+  <a-entity 
+    laser-controls="hand: left" 
+    raycaster="objects: .clickable; far: 20" 
+    vr-stick-turn>
+  </a-entity>
+
+  <!-- Mando Derecho: Puntero láser + Giro con Joystick -->
+  <a-entity 
+    laser-controls="hand: right" 
+    raycaster="objects: .clickable; far: 20" 
+    vr-stick-turn>
+  </a-entity>
+</a-entity>
   </a-scene>
 
   <script>
